@@ -293,12 +293,12 @@ pub fn Blocking(comptime H: type) type {
             // if sec is null, it means we want to cancel the timeout.
             fn init(sec: u32) Timeout {
                 return .{
-                    .sec = sec,
-                    .timeval = std.mem.toBytes(posix.timeval{ .sec = @intCast(sec), .usec = 0 }),
+                    .tv_sec = sec,
+                    .timeval = std.mem.toBytes(posix.timeval{ .tv_sec = @intCast(sec), .tv_usec = 0 }),
                 };
             }
 
-            pub const none = std.mem.toBytes(posix.timeval{ .sec = 0, .usec = 0 });
+            pub const none = std.mem.toBytes(posix.timeval{ .tv_sec = 0, .tv_usec = 0 });
         };
 
         const Self = @This();
@@ -363,7 +363,7 @@ pub fn Blocking(comptime H: type) type {
                 // Do our handshake
                 errdefer self.cleanupConn(hc);
                 const timeout = self.handshake_timeout;
-                const deadline = timestamp() + timeout.sec;
+                const deadline = timestamp() + timeout.tv_sec;
                 try posix.setsockopt(socket, posix.SOL.SOCKET, posix.SO.RCVTIMEO, &timeout.timeval);
 
                 while (true) {
@@ -857,7 +857,7 @@ const KQueue = struct {
 
     fn wait(self: *KQueue, timeout_sec: ?i32) !Iterator {
         const event_list = &self.event_list;
-        const timeout: ?posix.timespec = if (timeout_sec) |ts| posix.timespec{ .sec = ts, .nsec = 0 } else null;
+        const timeout: ?posix.timespec = if (timeout_sec) |ts| posix.timespec{ .tv_sec = ts, .nsec = 0 } else null;
         const event_count = try posix.kevent(self.q, self.change_buffer[0..self.change_count], event_list, if (timeout) |ts| &ts else null);
         self.change_count = 0;
 
@@ -1636,7 +1636,7 @@ fn preHandOffWrite(conn: *Conn, response: []const u8) void {
     }
 
     const socket = conn.stream.handle;
-    const timeout = std.mem.toBytes(posix.timeval{ .sec = 5, .usec = 0 });
+    const timeout = std.mem.toBytes(posix.timeval{ .tv_sec = 5, .tv_usec = 0 });
     posix.setsockopt(socket, posix.SOL.SOCKET, posix.SO.SNDTIMEO, &timeout) catch return;
 
     var pos: usize = 0;
@@ -1656,7 +1656,7 @@ fn timestamp() u32 {
     }
     var ts: posix.timespec = undefined;
     posix.clock_gettime(posix.CLOCK.REALTIME, &ts) catch unreachable;
-    return @intCast(ts.sec);
+    return @intCast(ts.tv_sec);
 }
 
 // intrusive doubly-linked list with count, not thread safe
@@ -1815,7 +1815,7 @@ test "Conn: close" {
 }
 
 fn testStream(handshake: bool) !net.Stream {
-    const timeout = std.mem.toBytes(std.posix.timeval{ .sec = 0, .usec = 20_000 });
+    const timeout = std.mem.toBytes(std.posix.timeval{ .tv_sec = 0, .tv_usec = 20_000 });
     const address = try std.net.Address.parseIp("127.0.0.1", 9292);
     const stream = try std.net.tcpConnectToAddress(address);
     try std.posix.setsockopt(stream.handle, std.posix.SOL.SOCKET, std.posix.SO.RCVTIMEO, &timeout);

@@ -25,8 +25,8 @@ pub const Testing = struct {
 
         const pair = t.SocketPair.init();
         const timeout = std.mem.toBytes(std.posix.timeval{
-            .sec = 0,
-            .usec = 50_000,
+            .tv_sec = 0,
+            .tv_usec = 50_000,
         });
         std.posix.setsockopt(pair.client.handle, std.posix.SOL.SOCKET, std.posix.SO.RCVTIMEO, &timeout) catch unreachable;
 

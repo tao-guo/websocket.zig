@@ -370,7 +370,7 @@ pub const Stream = struct {
         return self.stream.writeAll(data);
     }
 
-    const zero_timeout = std.mem.toBytes(posix.timeval{ .sec = 0, .usec = 0 });
+    const zero_timeout = std.mem.toBytes(posix.timeval{ .tv_sec = 0, .tv_usec = 0 });
     pub fn writeTimeout(self: *const Stream, ms: u32) !void {
         return self.setTimeout(posix.SO.SNDTIMEO, ms);
     }
@@ -385,8 +385,8 @@ pub const Stream = struct {
         }
 
         const timeout = std.mem.toBytes(posix.timeval{
-            .sec = @intCast(@divTrunc(ms, 1000)),
-            .usec = @intCast(@mod(ms, 1000) * 1000),
+            .tv_sec = @intCast(@divTrunc(ms, 1000)),
+            .tv_usec = @intCast(@mod(ms, 1000) * 1000),
         });
         return self.setsockopt(opt_name, &timeout);
     }
